@@ -7,7 +7,7 @@ from skimage import morphology
 from collections import deque
 
 class LaneDetectImage:
-    def display(selg, img, title, color = 1):
+    def display(self, img, title, color = 1):
         if color:
             plt.imshow(img)
         else:
@@ -32,6 +32,33 @@ class LaneDetectImage:
             if ret:
                 imgpoints.append(corners)
                 objpoints.append(objp)
+                if choice:
+                    draw_corners = cv2.drawChessboardCorners(img, (nx, ny), corners, ret)
+                    self.display(draw_corners, 'Found all corners:{}'.format(ret))
+
+        if len(objpoints) == len(imgpoints) and len(objpoints) != 0:
+            ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_sz, None, None)
+            return {'ret': ret, 'cameraMatrix': mtx, 'distorsionCoeff': dist, \
+                    'rotationVec': rvecs, 'translationVec': tvecs}
+
+        else:
+            raise cv2.Error("Camera Calibration Failed!")
+
+
+    def correction(self, image, calib_parms, showMe = 0):
+        corrected = cv2.undistort(image, calib_parms['cameraMatrix'], calib_parms['distorsionCoeff'], \
+                                    None, calib_parms['cameraMatrix'])
+        if showMe:
+            self.display(image, 'original', color = 1)
+            self.display(corrected, 'After correction', color=1)
+        return corrected
+
+
+
+
+
+
+
 
 
 
